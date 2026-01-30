@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
+import { StoryPage } from './pages/StoryPage'
 import { RequireAuth } from './routes/RequireAuth'
 
 function App() {
@@ -12,6 +13,14 @@ function App() {
         element={
           <RequireAuth>
             <HomePage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/stories/:storyId"
+        element={
+          <RequireAuth>
+            <StoryPage />
           </RequireAuth>
         }
       />

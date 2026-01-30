@@ -1,5 +1,6 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app'
 import { getAuth, type Auth } from 'firebase/auth'
+import { getFirestore, type Firestore } from 'firebase/firestore'
 
 export type FirebaseConfig = {
   apiKey: string
@@ -33,6 +34,7 @@ function readFirebaseConfig(): FirebaseConfig | null {
 
 let app: FirebaseApp | null = null
 let auth: Auth | null = null
+let firestore: Firestore | null = null
 
 export function isFirebaseConfigured(): boolean {
   return readFirebaseConfig() !== null
@@ -56,4 +58,10 @@ export function getFirebaseAuth(): Auth {
   if (auth) return auth
   auth = getAuth(getFirebaseApp())
   return auth
+}
+
+export function getFirestoreDb(): Firestore {
+  if (firestore) return firestore
+  firestore = getFirestore(getFirebaseApp())
+  return firestore
 }
