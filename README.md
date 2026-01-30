@@ -9,6 +9,13 @@ npm install
 npm run dev
 ```
 
+## Current UX (very early)
+
+- `/login`: "Continue as guest" (anonymous auth)
+- `/`: create a story (title input) + list your existing stories
+- `/stories/:storyId`: edit the story title (Save button or press Enter)
+- `/settings`: placeholder settings page
+
 ## Firebase setup (optional for now)
 
 The app renders without Firebase, but auth is disabled until you configure it.
