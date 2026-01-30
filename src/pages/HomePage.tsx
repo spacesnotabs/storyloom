@@ -9,6 +9,7 @@ export function HomePage() {
   const nav = useNavigate()
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [newTitle, setNewTitle] = useState('Untitled story')
 
   const [stories, setStories] = useState<Story[] | null>(null)
   const [storiesLoading, setStoriesLoading] = useState(false)
@@ -50,7 +51,7 @@ export function HomePage() {
     try {
       setCreating(true)
       const storyId = await createStory({
-        title: 'Untitled story',
+        title: newTitle.trim() || 'Untitled story',
         ownerUid: auth.user.uid,
       })
       nav(`/stories/${storyId}`)
@@ -77,12 +78,24 @@ export function HomePage() {
         </code>
       </p>
 
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-        <button onClick={onNewStory} disabled={creating}>
-          {creating ? 'Creating…' : 'New story'}
-        </button>
+      <div style={{ display: 'grid', gap: 10 }}>
+        <label style={{ display: 'grid', gap: 6, maxWidth: 420 }}>
+          <span>New story title</span>
+          <input
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            placeholder="Untitled story"
+            style={{ padding: 8, fontSize: 16 }}
+          />
+        </label>
 
-        <button onClick={() => auth.signOut()}>Sign out</button>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <button onClick={onNewStory} disabled={creating}>
+            {creating ? 'Creating…' : 'Create story'}
+          </button>
+
+          <button onClick={() => auth.signOut()}>Sign out</button>
+        </div>
       </div>
 
       <hr style={{ margin: '20px 0' }} />
