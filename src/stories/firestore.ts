@@ -19,7 +19,7 @@ export type CreateStoryInput = {
   ownerUid: string
 }
 
-function toStory(id: string, data: Record<string, unknown>): Story {
+export function normalizeStory(id: string, data: Record<string, unknown>): Story {
   return {
     id,
     title: (data.title as string) ?? 'Untitled story',
@@ -45,7 +45,7 @@ export async function getStoryById(storyId: string): Promise<Story | null> {
   const ref = doc(db, 'stories', storyId)
   const snap = await getDoc(ref)
   if (!snap.exists()) return null
-  return toStory(snap.id, snap.data() as Record<string, unknown>)
+  return normalizeStory(snap.id, snap.data() as Record<string, unknown>)
 }
 
 export async function setStoryTitle(params: {
@@ -79,5 +79,7 @@ export async function listStoriesByOwnerUid(params: {
   )
 
   const snap = await getDocs(q)
-  return snap.docs.map((d) => toStory(d.id, d.data() as Record<string, unknown>))
+  return snap.docs.map((d) =>
+    normalizeStory(d.id, d.data() as Record<string, unknown>)
+  )
 }
