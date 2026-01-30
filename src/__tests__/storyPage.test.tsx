@@ -1,7 +1,13 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { vi } from 'vitest'
 import { StoryPage } from '../pages/StoryPage'
+
+const { setStoryTitleMock } = vi.hoisted(() => {
+  return {
+    setStoryTitleMock: vi.fn(async () => undefined),
+  }
+})
 
 vi.mock('../stories/firestore', () => {
   return {
@@ -10,7 +16,7 @@ vi.mock('../stories/firestore', () => {
       title: 'Original Title',
       ownerUid: 'user_123',
     })),
-    setStoryTitle: vi.fn(async () => undefined),
+    setStoryTitle: setStoryTitleMock,
   }
 })
 
@@ -31,4 +37,26 @@ it('loads a story title and enables Save only when changed', async () => {
 
   fireEvent.change(input, { target: { value: 'Updated Title' } })
   expect(saveBtn).toBeEnabled()
+})
+
+it('saves on Enter', async () => {
+  render(
+    <MemoryRouter initialEntries={['/stories/story_1']}>
+      <Routes>
+        <Route path="/stories/:storyId" element={<StoryPage />} />
+      </Routes>
+    </MemoryRouter>
+  )
+
+  const input = await screen.findByPlaceholderText('Untitled story')
+
+  fireEvent.change(input, { target: { value: 'Enter Saved' } })
+  fireEvent.keyDown(input, { key: 'Enter' })
+
+  await waitFor(() => {
+    expect(setStoryTitleMock).toHaveBeenCalledWith({
+      storyId: 'story_1',
+      title: 'Enter Saved',
+    })
+  })
 })
