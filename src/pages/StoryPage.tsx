@@ -8,7 +8,10 @@ export function StoryPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [title, setTitle] = useState('')
+  const [initialTitle, setInitialTitle] = useState('')
   const [saving, setSaving] = useState(false)
+
+  const isDirty = title !== initialTitle
 
   useEffect(() => {
     let cancelled = false
@@ -30,7 +33,9 @@ export function StoryPage() {
           return
         }
 
-        setTitle((story.data.title as string) ?? 'Untitled story')
+        const nextTitle = (story.data.title as string) ?? 'Untitled story'
+        setTitle(nextTitle)
+        setInitialTitle(nextTitle)
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : String(e))
@@ -50,11 +55,14 @@ export function StoryPage() {
 
   async function onSave() {
     if (!id) return
+    if (!isDirty) return
+
     setError(null)
 
     try {
       setSaving(true)
       await setStoryTitle({ storyId: id, title })
+      setInitialTitle(title)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -75,24 +83,31 @@ export function StoryPage() {
       {!loading && !error ? (
         <div style={{ display: 'grid', gap: 12 }}>
           <label style={{ display: 'grid', gap: 6 }}>
-            <span>Title</span>
+            <span>
+              Title {isDirty ? <em style={{ opacity: 0.65 }}>(unsaved)</em> : null}
+            </span>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  void onSave()
+                }
+              }}
               placeholder="Untitled story"
               style={{ padding: 8, fontSize: 16 }}
             />
           </label>
 
-          <div>
-            <button onClick={onSave} disabled={saving}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <button onClick={onSave} disabled={saving || !isDirty}>
               {saving ? 'Saving…' : 'Save'}
             </button>
+            {!isDirty ? <span style={{ opacity: 0.65 }}>Saved</span> : null}
           </div>
 
-          <p style={{ opacity: 0.7 }}>
-            Next: add chapters/scenes + editor UI.
-          </p>
+          <p style={{ opacity: 0.7 }}>Next: add chapters/scenes + editor UI.</p>
         </div>
       ) : null}
 
