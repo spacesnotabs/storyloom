@@ -68,6 +68,10 @@ export function HomePage() {
       <p>Authenticated shell ✅</p>
 
       <p>
+        <Link to="/settings">Settings</Link>
+      </p>
+
+      <p>
         User:{' '}
         <code>
           {auth.user
