@@ -3,8 +3,13 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
   serverTimestamp,
   setDoc,
+  where,
 } from 'firebase/firestore'
 import { getFirestoreDb } from '../auth/firebase'
 
@@ -48,4 +53,37 @@ export async function setStoryTitle(params: {
     },
     { merge: true }
   )
+}
+
+export type StoryListItem = {
+  id: string
+  title: string
+  updatedAt?: unknown
+  createdAt?: unknown
+}
+
+export async function listStoriesByOwnerUid(params: {
+  ownerUid: string
+  max?: number
+}): Promise<StoryListItem[]> {
+  const db = getFirestoreDb()
+  const max = params.max ?? 20
+
+  const q = query(
+    collection(db, 'stories'),
+    where('ownerUid', '==', params.ownerUid),
+    orderBy('updatedAt', 'desc'),
+    limit(max)
+  )
+
+  const snap = await getDocs(q)
+  return snap.docs.map((d) => {
+    const data = d.data() as Record<string, unknown>
+    return {
+      id: d.id,
+      title: (data.title as string) ?? 'Untitled story',
+      updatedAt: data.updatedAt,
+      createdAt: data.createdAt,
+    }
+  })
 }

@@ -1,13 +1,42 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/context'
-import { createStory } from '../stories/firestore'
+import { createStory, listStoriesByOwnerUid, type StoryListItem } from '../stories/firestore'
 
 export function HomePage() {
   const auth = useAuth()
   const nav = useNavigate()
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const [stories, setStories] = useState<StoryListItem[] | null>(null)
+  const [storiesLoading, setStoriesLoading] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function run() {
+      if (!auth.user) return
+
+      try {
+        setStoriesLoading(true)
+        const rows = await listStoriesByOwnerUid({ ownerUid: auth.user.uid })
+        if (!cancelled) setStories(rows)
+      } catch (e) {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : String(e))
+        }
+      } finally {
+        if (!cancelled) setStoriesLoading(false)
+      }
+    }
+
+    run()
+
+    return () => {
+      cancelled = true
+    }
+  }, [auth.user])
 
   async function onNewStory() {
     setError(null)
@@ -32,7 +61,7 @@ export function HomePage() {
   }
 
   return (
-    <div style={{ maxWidth: 640 }}>
+    <div style={{ maxWidth: 720 }}>
       <h1>StoryLoom</h1>
       <p>Authenticated shell ✅</p>
 
@@ -54,6 +83,26 @@ export function HomePage() {
 
         <button onClick={() => auth.signOut()}>Sign out</button>
       </div>
+
+      <hr style={{ margin: '20px 0' }} />
+
+      <h2 style={{ marginBottom: 8 }}>My stories</h2>
+
+      {storiesLoading ? <p>Loading stories…</p> : null}
+
+      {!storiesLoading && stories && stories.length === 0 ? (
+        <p style={{ opacity: 0.7 }}>No stories yet. Click “New story” to start.</p>
+      ) : null}
+
+      {!storiesLoading && stories && stories.length > 0 ? (
+        <ul style={{ display: 'grid', gap: 6, paddingLeft: 18 }}>
+          {stories.map((s) => (
+            <li key={s.id}>
+              <Link to={`/stories/${s.id}`}>{s.title}</Link>
+            </li>
+          ))}
+        </ul>
+      ) : null}
 
       {error ? (
         <p style={{ color: 'crimson' }}>
