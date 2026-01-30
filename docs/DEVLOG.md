@@ -8,6 +8,24 @@
 - Added minimal routing + auth gate shell (login route, protected home route)
 - Added Firebase env config loader + .env.example (renders “missing config” UI when not set)
 
+### Checkpoint — dev block (early afternoon)
+- Elapsed: ~30 minutes
+- Commits:
+  - 3e107d9
+  - 3463fd9
+  - 2336033
+  - 836d621
+  - 8a88bc2
+  - fffe3b9
+  - b18aa48
+  - 60a5c1e
+  - 4eea400
+  - 2f62317
+- Changelog:
+  - Home now lists your stories (Firestore query) and lets you create a new story with a custom title (Enter-to-create).
+  - Story page has a better title-save UX (dirty state + Save disabled when unchanged; Enter-to-save) + tests.
+  - Added a placeholder Settings page + updated README/architecture docs + added a screenshot in `docs/screenshots/2026-01-30-login.png`.
+
 Next:
-- Add "new story" scaffold + Firestore write (behind auth)
-- Add real auth providers (Google/email) + settings page
+- Hook up non-anonymous auth (Google/email) + wire Settings to account prefs
+- Add story content model (chapters/scenes) and an actual editor UI
