@@ -6,10 +6,24 @@
 - Auth: Firebase Auth
 - DB: Firestore
 
-## Code organization (planned)
-- `src/app/` app shell + routing
-- `src/features/` prompts, stories, collections
-- `src/lib/` firebase client, domain utils
+## Current code organization
+- `src/auth/` Firebase config + auth context/provider
+- `src/pages/` route pages (login, home, story)
+- `src/routes/` route wrappers (e.g. `RequireAuth`)
+- `src/stories/` story domain types + Firestore calls
+
+## Firestore data model (early)
+
+### `stories/{storyId}`
+- `title: string`
+- `ownerUid: string`
+- `createdAt: serverTimestamp`
+- `updatedAt: serverTimestamp`
+
+Queries currently used:
+- List stories for a user, ordered by `updatedAt desc`
+
+Note: Firestore may require a composite index for `ownerUid == ...` + `orderBy(updatedAt)`.
 
 ## Testing
 - Unit/UI: Vitest + Testing Library
