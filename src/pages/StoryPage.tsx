@@ -33,7 +33,7 @@ export function StoryPage() {
           return
         }
 
-        const nextTitle = (story.data.title as string) ?? 'Untitled story'
+        const nextTitle = story.title ?? 'Untitled story'
         setTitle(nextTitle)
         setInitialTitle(nextTitle)
       } catch (e) {

@@ -7,7 +7,8 @@ vi.mock('../stories/firestore', () => {
   return {
     getStoryById: vi.fn(async () => ({
       id: 'story_1',
-      data: { title: 'Original Title' },
+      title: 'Original Title',
+      ownerUid: 'user_123',
     })),
     setStoryTitle: vi.fn(async () => undefined),
   }

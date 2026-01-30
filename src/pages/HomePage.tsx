@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/context'
-import { createStory, listStoriesByOwnerUid, type StoryListItem } from '../stories/firestore'
+import { createStory, listStoriesByOwnerUid } from '../stories/firestore'
+import type { Story } from '../stories/types'
 
 export function HomePage() {
   const auth = useAuth()
@@ -9,7 +10,7 @@ export function HomePage() {
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const [stories, setStories] = useState<StoryListItem[] | null>(null)
+  const [stories, setStories] = useState<Story[] | null>(null)
   const [storiesLoading, setStoriesLoading] = useState(false)
 
   useEffect(() => {

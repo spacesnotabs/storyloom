@@ -12,10 +12,21 @@ import {
   where,
 } from 'firebase/firestore'
 import { getFirestoreDb } from '../auth/firebase'
+import type { Story } from './types'
 
 export type CreateStoryInput = {
   title: string
   ownerUid: string
+}
+
+function toStory(id: string, data: Record<string, unknown>): Story {
+  return {
+    id,
+    title: (data.title as string) ?? 'Untitled story',
+    ownerUid: (data.ownerUid as string) ?? '',
+    updatedAt: data.updatedAt,
+    createdAt: data.createdAt,
+  }
 }
 
 export async function createStory(input: CreateStoryInput): Promise<string> {
@@ -29,14 +40,12 @@ export async function createStory(input: CreateStoryInput): Promise<string> {
   return ref.id
 }
 
-export async function getStoryById(
-  storyId: string
-): Promise<{ id: string; data: Record<string, unknown> } | null> {
+export async function getStoryById(storyId: string): Promise<Story | null> {
   const db = getFirestoreDb()
   const ref = doc(db, 'stories', storyId)
   const snap = await getDoc(ref)
   if (!snap.exists()) return null
-  return { id: snap.id, data: snap.data() as Record<string, unknown> }
+  return toStory(snap.id, snap.data() as Record<string, unknown>)
 }
 
 export async function setStoryTitle(params: {
@@ -55,17 +64,10 @@ export async function setStoryTitle(params: {
   )
 }
 
-export type StoryListItem = {
-  id: string
-  title: string
-  updatedAt?: unknown
-  createdAt?: unknown
-}
-
 export async function listStoriesByOwnerUid(params: {
   ownerUid: string
   max?: number
-}): Promise<StoryListItem[]> {
+}): Promise<Story[]> {
   const db = getFirestoreDb()
   const max = params.max ?? 20
 
@@ -77,13 +79,5 @@ export async function listStoriesByOwnerUid(params: {
   )
 
   const snap = await getDocs(q)
-  return snap.docs.map((d) => {
-    const data = d.data() as Record<string, unknown>
-    return {
-      id: d.id,
-      title: (data.title as string) ?? 'Untitled story',
-      updatedAt: data.updatedAt,
-      createdAt: data.createdAt,
-    }
-  })
+  return snap.docs.map((d) => toStory(d.id, d.data() as Record<string, unknown>))
 }
