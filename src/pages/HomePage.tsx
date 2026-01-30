@@ -84,6 +84,12 @@ export function HomePage() {
           <input
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                void onNewStory()
+              }
+            }}
             placeholder="Untitled story"
             style={{ padding: 8, fontSize: 16 }}
           />

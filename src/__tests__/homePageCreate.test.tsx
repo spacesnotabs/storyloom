@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { vi } from 'vitest'
+import { beforeEach, vi } from 'vitest'
 
 const { navigateMock, createStoryMock } = vi.hoisted(() => {
   return {
@@ -37,6 +37,11 @@ vi.mock('../stories/firestore', () => {
 
 import { HomePage } from '../pages/HomePage'
 
+beforeEach(() => {
+  navigateMock.mockClear()
+  createStoryMock.mockClear()
+})
+
 it('creates a story with the provided title and navigates to it', async () => {
   render(
     <MemoryRouter>
@@ -44,7 +49,6 @@ it('creates a story with the provided title and navigates to it', async () => {
     </MemoryRouter>
   )
 
-  // wait for the initial list load effect to settle
   await screen.findByText(/no stories yet/i)
 
   const input = screen.getByLabelText(/new story title/i)
@@ -54,6 +58,29 @@ it('creates a story with the provided title and navigates to it', async () => {
 
   expect(createStoryMock).toHaveBeenCalledWith({
     title: 'A New Hope',
+    ownerUid: 'user_123',
+  })
+
+  await waitFor(() => {
+    expect(navigateMock).toHaveBeenCalledWith('/stories/story_123')
+  })
+})
+
+it('creates a story when pressing Enter in the title input', async () => {
+  render(
+    <MemoryRouter>
+      <HomePage />
+    </MemoryRouter>
+  )
+
+  await screen.findByText(/no stories yet/i)
+
+  const input = screen.getByLabelText(/new story title/i)
+  fireEvent.change(input, { target: { value: 'Keyboard Story' } })
+  fireEvent.keyDown(input, { key: 'Enter' })
+
+  expect(createStoryMock).toHaveBeenCalledWith({
+    title: 'Keyboard Story',
     ownerUid: 'user_123',
   })
 
