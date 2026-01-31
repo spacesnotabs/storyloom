@@ -20,8 +20,14 @@
 - `createdAt: serverTimestamp`
 - `updatedAt: serverTimestamp`
 
+### `stories/{storyId}/scenes/{sceneId}`
+- `body: string`
+- `createdAt: serverTimestamp`
+- `updatedAt: serverTimestamp`
+
 Queries currently used:
 - List stories for a user, ordered by `updatedAt desc`
+- List scenes for a story, ordered by `createdAt asc`
 
 Note: Firestore may require a composite index for `ownerUid == ...` + `orderBy(updatedAt)`.
 
