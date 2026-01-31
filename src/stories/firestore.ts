@@ -140,3 +140,12 @@ export async function listScenesByStoryId(params: {
     )
   )
 }
+
+export async function deleteSceneById(params: {
+  storyId: string
+  sceneId: string
+}): Promise<void> {
+  const db = getFirestoreDb()
+  const ref = doc(db, 'stories', params.storyId, 'scenes', params.sceneId)
+  await deleteDoc(ref)
+}

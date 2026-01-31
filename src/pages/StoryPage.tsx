@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   createScene,
+  deleteSceneById,
   deleteStoryById,
   getStoryById,
   listScenesByStoryId,
@@ -24,6 +25,7 @@ export function StoryPage() {
   const [scenesLoading, setScenesLoading] = useState(false)
   const [newSceneBody, setNewSceneBody] = useState('')
   const [addingScene, setAddingScene] = useState(false)
+  const [deletingSceneId, setDeletingSceneId] = useState<string | null>(null)
 
   const isDirty = title !== initialTitle
 
@@ -131,6 +133,25 @@ export function StoryPage() {
     }
   }
 
+  async function onDeleteScene(sceneId: string) {
+    if (!id) return
+
+    const ok = window.confirm('Delete this scene? This cannot be undone.')
+    if (!ok) return
+
+    setError(null)
+
+    try {
+      setDeletingSceneId(sceneId)
+      await deleteSceneById({ storyId: id, sceneId })
+      setScenes((prev) => (prev ? prev.filter((s) => s.id !== sceneId) : prev))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setDeletingSceneId(null)
+    }
+  }
+
   return (
     <div style={{ maxWidth: 720 }}>
       <p>
@@ -194,17 +215,30 @@ export function StoryPage() {
             <ol style={{ display: 'grid', gap: 10, paddingLeft: 18 }}>
               {scenes.map((s) => (
                 <li key={s.id}>
-                  <pre
-                    style={{
-                      whiteSpace: 'pre-wrap',
-                      background: '#1111110a',
-                      padding: 10,
-                      borderRadius: 6,
-                      margin: 0,
-                    }}
-                  >
-                    {s.body}
-                  </pre>
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    <pre
+                      style={{
+                        whiteSpace: 'pre-wrap',
+                        background: '#1111110a',
+                        padding: 10,
+                        borderRadius: 6,
+                        margin: 0,
+                      }}
+                    >
+                      {s.body}
+                    </pre>
+
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                      <span style={{ flex: 1 }} />
+                      <button
+                        onClick={() => void onDeleteScene(s.id)}
+                        disabled={deletingSceneId === s.id}
+                        style={{ color: 'crimson' }}
+                      >
+                        {deletingSceneId === s.id ? 'Deleting…' : 'Delete scene'}
+                      </button>
+                    </div>
+                  </div>
                 </li>
               ))}
             </ol>

@@ -3,11 +3,17 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { vi } from 'vitest'
 import { StoryPage } from '../pages/StoryPage'
 
-const { setStoryTitleMock, deleteStoryByIdMock, createSceneMock } = vi.hoisted(() => {
+const {
+  setStoryTitleMock,
+  deleteStoryByIdMock,
+  createSceneMock,
+  deleteSceneByIdMock,
+} = vi.hoisted(() => {
   return {
     setStoryTitleMock: vi.fn(async () => undefined),
     deleteStoryByIdMock: vi.fn(async () => undefined),
     createSceneMock: vi.fn(async () => 'scene_1'),
+    deleteSceneByIdMock: vi.fn(async () => undefined),
   }
 })
 
@@ -22,6 +28,7 @@ vi.mock('../stories/firestore', () => {
       { id: 'scene_a', storyId: 'story_1', body: 'Opening line.' },
     ]),
     createScene: createSceneMock,
+    deleteSceneById: deleteSceneByIdMock,
     setStoryTitle: setStoryTitleMock,
     deleteStoryById: deleteStoryByIdMock,
   }
@@ -116,4 +123,34 @@ it('adds a new scene', async () => {
   })
 
   await screen.findByText('Second scene.')
+})
+
+it('deletes a scene after confirmation', async () => {
+  const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+  render(
+    <MemoryRouter initialEntries={['/stories/story_1']}>
+      <Routes>
+        <Route path="/stories/:storyId" element={<StoryPage />} />
+      </Routes>
+    </MemoryRouter>
+  )
+
+  await screen.findByText('Opening line.')
+
+  const deleteBtns = await screen.findAllByRole('button', { name: /delete scene/i })
+  fireEvent.click(deleteBtns[0])
+
+  await waitFor(() => {
+    expect(deleteSceneByIdMock).toHaveBeenCalledWith({
+      storyId: 'story_1',
+      sceneId: 'scene_a',
+    })
+  })
+
+  await waitFor(() => {
+    expect(screen.queryByText('Opening line.')).toBeNull()
+  })
+
+  confirmSpy.mockRestore()
 })
