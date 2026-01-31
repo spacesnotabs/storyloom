@@ -6,6 +6,7 @@ import {
   deleteStoryById,
   getStoryById,
   listScenesByStoryId,
+  setSceneBody,
   setStoryTitle,
 } from '../stories/firestore'
 import type { Scene } from '../stories/types'
@@ -26,6 +27,9 @@ export function StoryPage() {
   const [newSceneBody, setNewSceneBody] = useState('')
   const [addingScene, setAddingScene] = useState(false)
   const [deletingSceneId, setDeletingSceneId] = useState<string | null>(null)
+  const [editingSceneId, setEditingSceneId] = useState<string | null>(null)
+  const [editingBody, setEditingBody] = useState('')
+  const [savingSceneId, setSavingSceneId] = useState<string | null>(null)
 
   const isDirty = title !== initialTitle
 
@@ -145,10 +149,54 @@ export function StoryPage() {
       setDeletingSceneId(sceneId)
       await deleteSceneById({ storyId: id, sceneId })
       setScenes((prev) => (prev ? prev.filter((s) => s.id !== sceneId) : prev))
+
+      if (editingSceneId === sceneId) {
+        setEditingSceneId(null)
+        setEditingBody('')
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
       setDeletingSceneId(null)
+    }
+  }
+
+  function onEditSceneStart(scene: Scene) {
+    setEditingSceneId(scene.id)
+    setEditingBody(scene.body)
+  }
+
+  function onEditSceneCancel() {
+    setEditingSceneId(null)
+    setEditingBody('')
+  }
+
+  async function onEditSceneSave() {
+    if (!id) return
+    if (!editingSceneId) return
+
+    const body = editingBody.trim()
+    if (!body) {
+      setError('Scene text cannot be empty')
+      return
+    }
+
+    setError(null)
+
+    try {
+      setSavingSceneId(editingSceneId)
+      await setSceneBody({ storyId: id, sceneId: editingSceneId, body })
+      setScenes((prev) =>
+        prev
+          ? prev.map((s) => (s.id === editingSceneId ? { ...s, body } : s))
+          : prev
+      )
+      setEditingSceneId(null)
+      setEditingBody('')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setSavingSceneId(null)
     }
   }
 
@@ -216,23 +264,52 @@ export function StoryPage() {
               {scenes.map((s) => (
                 <li key={s.id}>
                   <div style={{ display: 'grid', gap: 8 }}>
-                    <pre
-                      style={{
-                        whiteSpace: 'pre-wrap',
-                        background: '#1111110a',
-                        padding: 10,
-                        borderRadius: 6,
-                        margin: 0,
-                      }}
-                    >
-                      {s.body}
-                    </pre>
+                    {editingSceneId === s.id ? (
+                      <textarea
+                        value={editingBody}
+                        onChange={(e) => setEditingBody(e.target.value)}
+                        rows={6}
+                        style={{ padding: 10, fontSize: 14, lineHeight: 1.4 }}
+                      />
+                    ) : (
+                      <pre
+                        style={{
+                          whiteSpace: 'pre-wrap',
+                          background: '#1111110a',
+                          padding: 10,
+                          borderRadius: 6,
+                          margin: 0,
+                        }}
+                      >
+                        {s.body}
+                      </pre>
+                    )}
 
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                       <span style={{ flex: 1 }} />
+
+                      {editingSceneId === s.id ? (
+                        <>
+                          <button
+                            onClick={() => void onEditSceneSave()}
+                            disabled={savingSceneId === s.id || !editingBody.trim()}
+                          >
+                            {savingSceneId === s.id ? 'Saving…' : 'Save'}
+                          </button>
+                          <button
+                            onClick={onEditSceneCancel}
+                            disabled={savingSceneId === s.id}
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <button onClick={() => onEditSceneStart(s)}>Edit</button>
+                      )}
+
                       <button
                         onClick={() => void onDeleteScene(s.id)}
-                        disabled={deletingSceneId === s.id}
+                        disabled={deletingSceneId === s.id || savingSceneId === s.id}
                         style={{ color: 'crimson' }}
                       >
                         {deletingSceneId === s.id ? 'Deleting…' : 'Delete scene'}

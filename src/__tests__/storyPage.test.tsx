@@ -8,12 +8,14 @@ const {
   deleteStoryByIdMock,
   createSceneMock,
   deleteSceneByIdMock,
+  setSceneBodyMock,
 } = vi.hoisted(() => {
   return {
     setStoryTitleMock: vi.fn(async () => undefined),
     deleteStoryByIdMock: vi.fn(async () => undefined),
     createSceneMock: vi.fn(async () => 'scene_1'),
     deleteSceneByIdMock: vi.fn(async () => undefined),
+    setSceneBodyMock: vi.fn(async () => undefined),
   }
 })
 
@@ -29,6 +31,7 @@ vi.mock('../stories/firestore', () => {
     ]),
     createScene: createSceneMock,
     deleteSceneById: deleteSceneByIdMock,
+    setSceneBody: setSceneBodyMock,
     setStoryTitle: setStoryTitleMock,
     deleteStoryById: deleteStoryByIdMock,
   }
@@ -153,4 +156,35 @@ it('deletes a scene after confirmation', async () => {
   })
 
   confirmSpy.mockRestore()
+})
+
+it('edits and saves a scene', async () => {
+  render(
+    <MemoryRouter initialEntries={['/stories/story_1']}>
+      <Routes>
+        <Route path="/stories/:storyId" element={<StoryPage />} />
+      </Routes>
+    </MemoryRouter>
+  )
+
+  await screen.findByText('Opening line.')
+
+  const editBtn = screen.getByRole('button', { name: /^edit$/i })
+  fireEvent.click(editBtn)
+
+  const editor = screen.getByDisplayValue('Opening line.')
+  fireEvent.change(editor, { target: { value: 'Revised line.' } })
+
+  const saveBtns = screen.getAllByRole('button', { name: /^save$/i })
+  fireEvent.click(saveBtns[1])
+
+  await waitFor(() => {
+    expect(setSceneBodyMock).toHaveBeenCalledWith({
+      storyId: 'story_1',
+      sceneId: 'scene_a',
+      body: 'Revised line.',
+    })
+  })
+
+  await screen.findByText('Revised line.')
 })
