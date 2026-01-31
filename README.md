@@ -13,7 +13,7 @@ npm run dev
 
 - `/login`: "Continue as guest" (anonymous auth)
 - `/`: create a story (title input) + list your existing stories
-- `/stories/:storyId`: edit the story title (Save button or press Enter) + basic scene list/add/delete
+- `/stories/:storyId`: edit the story title (Save button or press Enter) + basic scenes (list/add/edit/delete)
 - `/settings`: placeholder settings page
 
 ## Firebase setup (optional for now)
