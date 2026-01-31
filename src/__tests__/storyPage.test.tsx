@@ -3,10 +3,11 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { vi } from 'vitest'
 import { StoryPage } from '../pages/StoryPage'
 
-const { setStoryTitleMock, deleteStoryByIdMock } = vi.hoisted(() => {
+const { setStoryTitleMock, deleteStoryByIdMock, createSceneMock } = vi.hoisted(() => {
   return {
     setStoryTitleMock: vi.fn(async () => undefined),
     deleteStoryByIdMock: vi.fn(async () => undefined),
+    createSceneMock: vi.fn(async () => 'scene_1'),
   }
 })
 
@@ -17,6 +18,10 @@ vi.mock('../stories/firestore', () => {
       title: 'Original Title',
       ownerUid: 'user_123',
     })),
+    listScenesByStoryId: vi.fn(async () => [
+      { id: 'scene_a', storyId: 'story_1', body: 'Opening line.' },
+    ]),
+    createScene: createSceneMock,
     setStoryTitle: setStoryTitleMock,
     deleteStoryById: deleteStoryByIdMock,
   }
@@ -83,4 +88,32 @@ it('deletes after confirmation', async () => {
   })
 
   confirmSpy.mockRestore()
+})
+
+it('adds a new scene', async () => {
+  render(
+    <MemoryRouter initialEntries={['/stories/story_1']}>
+      <Routes>
+        <Route path="/stories/:storyId" element={<StoryPage />} />
+      </Routes>
+    </MemoryRouter>
+  )
+
+  // existing scene loads
+  await screen.findByText('Opening line.')
+
+  const textarea = screen.getByPlaceholderText('Write the next scene…')
+  fireEvent.change(textarea, { target: { value: 'Second scene.' } })
+
+  const addBtn = screen.getByRole('button', { name: /add scene/i })
+  fireEvent.click(addBtn)
+
+  await waitFor(() => {
+    expect(createSceneMock).toHaveBeenCalledWith({
+      storyId: 'story_1',
+      body: 'Second scene.',
+    })
+  })
+
+  await screen.findByText('Second scene.')
 })

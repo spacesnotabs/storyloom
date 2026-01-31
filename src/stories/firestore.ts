@@ -13,7 +13,7 @@ import {
   where,
 } from 'firebase/firestore'
 import { getFirestoreDb } from '../auth/firebase'
-import type { Story } from './types'
+import type { Scene, Story } from './types'
 
 export type CreateStoryInput = {
   title: string
@@ -90,5 +90,53 @@ export async function listStoriesByOwnerUid(params: {
   const snap = await getDocs(q)
   return snap.docs.map((d) =>
     normalizeStory(d.id, d.data() as Record<string, unknown>)
+  )
+}
+
+export function normalizeScene(
+  params: { storyId: string; id: string },
+  data: Record<string, unknown>
+): Scene {
+  return {
+    id: params.id,
+    storyId: params.storyId,
+    body: (data.body as string) ?? '',
+    updatedAt: data.updatedAt,
+    createdAt: data.createdAt,
+  }
+}
+
+export async function createScene(params: {
+  storyId: string
+  body: string
+}): Promise<string> {
+  const db = getFirestoreDb()
+  const ref = await addDoc(collection(db, 'stories', params.storyId, 'scenes'), {
+    body: params.body,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  })
+  return ref.id
+}
+
+export async function listScenesByStoryId(params: {
+  storyId: string
+  max?: number
+}): Promise<Scene[]> {
+  const db = getFirestoreDb()
+  const max = params.max ?? 50
+
+  const q = query(
+    collection(db, 'stories', params.storyId, 'scenes'),
+    orderBy('createdAt', 'asc'),
+    limit(max)
+  )
+
+  const snap = await getDocs(q)
+  return snap.docs.map((d) =>
+    normalizeScene(
+      { storyId: params.storyId, id: d.id },
+      d.data() as Record<string, unknown>
+    )
   )
 }

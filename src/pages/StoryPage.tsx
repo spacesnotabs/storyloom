@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { deleteStoryById, getStoryById, setStoryTitle } from '../stories/firestore'
+import {
+  createScene,
+  deleteStoryById,
+  getStoryById,
+  listScenesByStoryId,
+  setStoryTitle,
+} from '../stories/firestore'
+import type { Scene } from '../stories/types'
 
 export function StoryPage() {
   const { storyId } = useParams()
@@ -12,6 +19,11 @@ export function StoryPage() {
   const [initialTitle, setInitialTitle] = useState('')
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+
+  const [scenes, setScenes] = useState<Scene[] | null>(null)
+  const [scenesLoading, setScenesLoading] = useState(false)
+  const [newSceneBody, setNewSceneBody] = useState('')
+  const [addingScene, setAddingScene] = useState(false)
 
   const isDirty = title !== initialTitle
 
@@ -38,6 +50,10 @@ export function StoryPage() {
         const nextTitle = story.title ?? 'Untitled story'
         setTitle(nextTitle)
         setInitialTitle(nextTitle)
+
+        setScenesLoading(true)
+        const sceneRows = await listScenesByStoryId({ storyId: id })
+        if (!cancelled) setScenes(sceneRows)
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : String(e))
@@ -45,6 +61,7 @@ export function StoryPage() {
       } finally {
         if (!cancelled) {
           setLoading(false)
+          setScenesLoading(false)
         }
       }
     }
@@ -75,9 +92,7 @@ export function StoryPage() {
   async function onDelete() {
     if (!id) return
 
-    const ok = window.confirm(
-      'Delete this story? This cannot be undone.'
-    )
+    const ok = window.confirm('Delete this story? This cannot be undone.')
     if (!ok) return
 
     setError(null)
@@ -90,6 +105,29 @@ export function StoryPage() {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
       setDeleting(false)
+    }
+  }
+
+  async function onAddScene() {
+    if (!id) return
+
+    const body = newSceneBody.trim()
+    if (!body) {
+      setError('Scene text cannot be empty')
+      return
+    }
+
+    setError(null)
+
+    try {
+      setAddingScene(true)
+      const sceneId = await createScene({ storyId: id, body })
+      setScenes((prev) => [...(prev ?? []), { id: sceneId, storyId: id, body }])
+      setNewSceneBody('')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setAddingScene(false)
     }
   }
 
@@ -140,7 +178,57 @@ export function StoryPage() {
             </button>
           </div>
 
-          <p style={{ opacity: 0.7 }}>Next: add chapters/scenes + editor UI.</p>
+          <hr style={{ margin: '16px 0' }} />
+
+          <h2 style={{ marginBottom: 8 }}>Scenes</h2>
+
+          {scenesLoading ? <p>Loading scenes…</p> : null}
+
+          {!scenesLoading && scenes && scenes.length === 0 ? (
+            <p style={{ opacity: 0.7 }}>
+              No scenes yet. Add the first chunk of prose below.
+            </p>
+          ) : null}
+
+          {!scenesLoading && scenes && scenes.length > 0 ? (
+            <ol style={{ display: 'grid', gap: 10, paddingLeft: 18 }}>
+              {scenes.map((s) => (
+                <li key={s.id}>
+                  <pre
+                    style={{
+                      whiteSpace: 'pre-wrap',
+                      background: '#1111110a',
+                      padding: 10,
+                      borderRadius: 6,
+                      margin: 0,
+                    }}
+                  >
+                    {s.body}
+                  </pre>
+                </li>
+              ))}
+            </ol>
+          ) : null}
+
+          <label style={{ display: 'grid', gap: 6 }}>
+            <span>New scene</span>
+            <textarea
+              value={newSceneBody}
+              onChange={(e) => setNewSceneBody(e.target.value)}
+              placeholder="Write the next scene…"
+              rows={6}
+              style={{ padding: 10, fontSize: 14, lineHeight: 1.4 }}
+            />
+          </label>
+
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <button onClick={onAddScene} disabled={addingScene}>
+              {addingScene ? 'Adding…' : 'Add scene'}
+            </button>
+            <span style={{ opacity: 0.7 }}>
+              Next: edit/reorder scenes; attach POV/notes.
+            </span>
+          </div>
         </div>
       ) : null}
 
