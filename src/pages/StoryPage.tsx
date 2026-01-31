@@ -249,6 +249,12 @@ export function StoryPage() {
             <textarea
               value={newSceneBody}
               onChange={(e) => setNewSceneBody(e.target.value)}
+              onKeyDown={(e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                  e.preventDefault()
+                  void onAddScene()
+                }
+              }}
               placeholder="Write the next scene…"
               rows={6}
               style={{ padding: 10, fontSize: 14, lineHeight: 1.4 }}
@@ -256,7 +262,11 @@ export function StoryPage() {
           </label>
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <button onClick={onAddScene} disabled={addingScene}>
+            <button
+              onClick={onAddScene}
+              disabled={addingScene || !newSceneBody.trim()}
+              title="Tip: Ctrl/Cmd+Enter"
+            >
               {addingScene ? 'Adding…' : 'Add scene'}
             </button>
             <span style={{ opacity: 0.7 }}>
