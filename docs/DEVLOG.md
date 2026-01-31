@@ -29,3 +29,12 @@
 Next:
 - Hook up non-anonymous auth (Google/email) + wire Settings to account prefs
 - Add story content model (chapters/scenes) and an actual editor UI
+
+### Checkpoint — dev block (evening)
+- Elapsed: ~30 minutes
+- Commits:
+  - 68a2df8
+- Changelog:
+  - Added Firestore `deleteStoryById()` helper.
+  - Story page now has a “Delete story” button with a confirm prompt; after delete, it returns you to Home.
+  - Added a StoryPage delete-flow unit test.
