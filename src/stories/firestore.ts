@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -62,6 +63,14 @@ export async function setStoryTitle(params: {
     },
     { merge: true }
   )
+}
+
+export async function deleteStoryById(params: {
+  storyId: string
+}): Promise<void> {
+  const db = getFirestoreDb()
+  const ref = doc(db, 'stories', params.storyId)
+  await deleteDoc(ref)
 }
 
 export async function listStoriesByOwnerUid(params: {

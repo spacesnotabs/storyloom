@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { getStoryById, setStoryTitle } from '../stories/firestore'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { deleteStoryById, getStoryById, setStoryTitle } from '../stories/firestore'
 
 export function StoryPage() {
   const { storyId } = useParams()
+  const nav = useNavigate()
   const id = useMemo(() => storyId ?? null, [storyId])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [title, setTitle] = useState('')
   const [initialTitle, setInitialTitle] = useState('')
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const isDirty = title !== initialTitle
 
@@ -70,6 +72,27 @@ export function StoryPage() {
     }
   }
 
+  async function onDelete() {
+    if (!id) return
+
+    const ok = window.confirm(
+      'Delete this story? This cannot be undone.'
+    )
+    if (!ok) return
+
+    setError(null)
+
+    try {
+      setDeleting(true)
+      await deleteStoryById({ storyId: id })
+      nav('/')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <div style={{ maxWidth: 720 }}>
       <p>
@@ -105,6 +128,16 @@ export function StoryPage() {
               {saving ? 'Saving…' : 'Save'}
             </button>
             {!isDirty ? <span style={{ opacity: 0.65 }}>Saved</span> : null}
+
+            <span style={{ flex: 1 }} />
+
+            <button
+              onClick={onDelete}
+              disabled={deleting}
+              style={{ color: 'crimson' }}
+            >
+              {deleting ? 'Deleting…' : 'Delete story'}
+            </button>
           </div>
 
           <p style={{ opacity: 0.7 }}>Next: add chapters/scenes + editor UI.</p>

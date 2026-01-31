@@ -3,9 +3,10 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { vi } from 'vitest'
 import { StoryPage } from '../pages/StoryPage'
 
-const { setStoryTitleMock } = vi.hoisted(() => {
+const { setStoryTitleMock, deleteStoryByIdMock } = vi.hoisted(() => {
   return {
     setStoryTitleMock: vi.fn(async () => undefined),
+    deleteStoryByIdMock: vi.fn(async () => undefined),
   }
 })
 
@@ -17,6 +18,7 @@ vi.mock('../stories/firestore', () => {
       ownerUid: 'user_123',
     })),
     setStoryTitle: setStoryTitleMock,
+    deleteStoryById: deleteStoryByIdMock,
   }
 })
 
@@ -59,4 +61,26 @@ it('saves on Enter', async () => {
       title: 'Enter Saved',
     })
   })
+})
+
+it('deletes after confirmation', async () => {
+  const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+  render(
+    <MemoryRouter initialEntries={['/stories/story_1']}>
+      <Routes>
+        <Route path="/" element={<div>home</div>} />
+        <Route path="/stories/:storyId" element={<StoryPage />} />
+      </Routes>
+    </MemoryRouter>
+  )
+
+  const deleteBtn = await screen.findByRole('button', { name: /delete story/i })
+  fireEvent.click(deleteBtn)
+
+  await waitFor(() => {
+    expect(deleteStoryByIdMock).toHaveBeenCalledWith({ storyId: 'story_1' })
+  })
+
+  confirmSpy.mockRestore()
 })
