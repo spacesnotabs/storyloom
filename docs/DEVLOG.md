@@ -38,3 +38,19 @@ Next:
   - Added Firestore `deleteStoryById()` helper.
   - Story page now has a “Delete story” button with a confirm prompt; after delete, it returns you to Home.
   - Added a StoryPage delete-flow unit test.
+
+### Checkpoint — dev block (evening 2)
+- Elapsed: ~30 minutes
+- Commits:
+  - ff97251
+  - 0c8bec1
+  - 86fe907
+  - d4904ef
+  - 4a43ce7
+  - f7a5445
+  - c639598
+  - 0ffc985
+- Changelog:
+  - Added a `scenes` subcollection in Firestore (`stories/{storyId}/scenes/{sceneId}`) with list + create + delete + edit helpers.
+  - Story page now includes a basic scene editor: list scenes, add a new scene (Ctrl/Cmd+Enter), edit/save, and delete with confirmation.
+  - Expanded unit tests (scene add/edit/delete flows + normalizeScene tests) and updated docs (README + Architecture).
